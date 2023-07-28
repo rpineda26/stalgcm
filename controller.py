@@ -143,6 +143,7 @@ def nextStep(list_transition, state, input):
           state  -  the current state you're in
 @returns: new_list  -  the filtered list where every transition function here has their current state
                         equal to the param state
+
 """
 
 def filterTransistionList(list_transition, state):
@@ -265,6 +266,7 @@ def validateDeterministic(Q, sigma, list_transition):
     return True
 
 """
+
 note: might update this function. As of my current understanding, 
 the machine will end if it reaches either accepting state and reject state
 and if the head points to an end marker.

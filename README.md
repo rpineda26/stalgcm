@@ -32,8 +32,7 @@ python3 main.py
 ## :trident: text input format
 **Q**     *This is the list of states separated by space characters*
 **Sigma**    *This is the alphabet separated by space characters*
-**(Start, Final, Reject)**     *Tuple (a,b, c) representing the start, accepting, and reject states. These should exist in Q*
-**n**      *integer n that represents how many transistion functions will follow below*
+**Start Final Reject**     *represents the start, accepting, and reject states separated by space characters. These should exist in Q*
 **transition functions**    *current state, input, next state, direction*
 .
 .  *n times*
@@ -49,7 +48,8 @@ python3 main.py
 2. transition function reading left end marker '-' as input should always result to 'right' direction
 3. transition function reading right end marker '+' as input should always result to 'left' direction
 4. transition function from the accepting state should never move into another non accepting state
-5. transition function from the reject state should enver move into anbother non reject state
+5. transition function from the reject state should enver move into another non reject state
+**Note:These restrictions are automatically validated by the machine.**
   
 ## :dragon: test cases
 the tests folder contains two directories: one for the machine definitions, and the other is for sample inputs
