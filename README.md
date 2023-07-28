@@ -40,4 +40,16 @@ python3 main.py
 .
 **transition functions** 
 
+### restrictions
+1. let s be an element from sigma, s should never be = '-' or '+'
+   - '-' is reserved for the left end marker
+   - '+' is reserved for the right end marker
+   - if your string input uses these symbols, replace them with some other symbol.
+  
+2. transition function reading left end marker '-' as input should always result to 'right' direction
+3. transition function reading right end marker '+' as input should always result to 'left' direction
+4. transition function from the accepting state should never move into another non accepting state
+5. transition function from the reject state should enver move into anbother non reject state
+  
+
 

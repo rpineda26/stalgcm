@@ -27,18 +27,20 @@ import sys
 """
 
 def readMachine(filename):
-    transition = []
+    transition_list = []
     with open(filename) as f:
       #  size = int(f.readline())
         Q = f.readline().split()
         sigma = f.readline().split()
-        start, accept, reject = f.readline().split()
-        length_states = int(f.readline())
-        for _ in range(length_states):
-            t = f.readline().split()
-            transition.append(t)
+        read_states = f.readline().split()
+        start, accept, reject = read_states
+        while True:
+            transition = f.readline().split()
+            if not transition:
+                break
+            transition_list.append(transition)
 
-    return Q, sigma, start, accept, reject, transition
+    return Q, sigma, start, accept, reject, transition_list
 
 """
 
@@ -68,26 +70,27 @@ def allStep(list_transition, start, accept, reject, word):
             flag = False
             if isAccepted(curr_state, accept):
                 accepted = True
-        displayAction(curr_state, word[head], word)
+        displayAction(curr_state, word[head], word, head)
     return accepted
 
-def quickStep(list_transition, start, accept, reject):
+def quickStep(list_transition, start, accept, reject, words):
     flag=  True
     head=0 # this is the pointer to which character will be read from the word 
     curr_state = start
     accepted = False
-    while(flag):
-        curr_state, direction = nextStep(list_transition, curr_state, word[head])
-        if direction =="left":
-            head -=1
-        else:
-            head +=1
-        if isEnd(curr_state, accept, reject):
-            flag = False
-            if isAccepted(curr_state, accept):
-                accepted = True
-        displayAction(curr_state, word[head], word)
-    return accepted
+    for word in words:
+        while(flag):
+            curr_state, direction = nextStep(list_transition, curr_state, word[head])
+            if direction =="left":
+                head -=1
+            else:
+                head +=1
+            if isEnd(curr_state, accept, reject):
+                flag = False
+                if isAccepted(curr_state, accept):
+                    accepted = True
+            displayAction(curr_state, word[head], word, head)
+        return accepted
 
 """
 
@@ -122,7 +125,7 @@ def nextStep(list_transition, state, input):
 def filterTransistionList(list_transition, state):
     new_list = []
     for i in list_transition:
-        curr_state, _,_,_ = i
+        curr_state,_,_,_ = i
         if curr_state == state:
             new_list.append(i)
     return new_list
@@ -142,6 +145,8 @@ def whichTransition_Exact(list_transition, input):
             return next_state, direction
     return 0
 
+""""""
+
 """
 @definition: This checks if the process should end terminate or not
 @params:  state   -  the current state
@@ -152,7 +157,7 @@ def whichTransition_Exact(list_transition, input):
 """
 
 def isEnd(state, accept,reject):
-    if state == accept | state == reject:
+    if state == accept or state == reject:
         return True
     else:
         return False
@@ -169,19 +174,34 @@ def isAccepted(state, accept):
         return True
     else:
         return False
+
+def attachEndMarker(word):
+    return  '-' + word + '+'
     
-def displayAction(state, input, string):
+def displayAction(state, input, string, head):
     print("Current State: "+state)
     print("Current Input: "+input)
     print("Word Input: " +string)
+    print("head: "+head)
 
 def main():
     _, _, start, accept, reject, list_transition = readMachine("test.txt")
     #Q, sigma will be included once the verification is accomplished
     word = input("Enter Word: ")
+    word = attachEndMarker(word)
+    """
+    print("start: "  + start)
+    print("accept: " + accept)
+    print("reject: " + reject)
+    for i in list_transition:
+        print(i)
+     """
     accepted = allStep(list_transition, start, accept, reject, word)
-
     if(accepted):
         print("Accepted")
     else:
         print("Rejected")
+
+
+if __name__ == "__main__":
+    main()

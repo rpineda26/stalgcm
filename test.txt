@@ -1,2 +1,31 @@
-Q1 Q2 Q3 Q4
-a b c
+Q1 Q2 Q3 Q4 Q5 Q6 Q7
+a b
+Q1 Q6 Q7
+Q1 - Q1 right
+Q1 a Q2 right
+Q1 b Q1 right
+Q1 + Q4 left
+Q2 - NA NA
+Q2 a Q3 right
+Q2 b Q2 right
+Q2 + Q7 left
+Q3 - NA NA
+Q3 a Q1 right
+Q3 b Q3 right
+Q3 + Q7 left
+Q4 - Q6 right
+Q4 a Q4 left
+Q4 b Q5 left
+Q4 + NA NA
+Q5 - Q7 right
+Q5 a Q5 left
+Q5 b Q4 left
+Q5 + NA NA
+Q6 - Q6 right
+Q6 a Q6 right
+Q6 b Q6 right
+Q6 + Q6 left
+Q7 - Q7 right
+Q7 a Q7 right
+Q7 b Q7 right
+Q7 + Q7 left
