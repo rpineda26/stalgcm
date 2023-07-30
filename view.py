@@ -35,7 +35,7 @@ class State(QWidget):
         self.label.setGeometry(int(x), int(y), label_width, label_height)
 
 class Machine(QWidget):
-    def __init__(self):
+    def __init__(self,machine):
         super().__init__()
         self.setWindowTitle('2-Way Deterministic Finite Automata')
         self.setFixedWidth(720)
@@ -44,6 +44,7 @@ class Machine(QWidget):
         self.fileName = None
         self.machine = None
         self.traverseSpeed = 100
+        self.machine = None
 
         hbox = QHBoxLayout()
         self.openTextFileButton = QPushButton('Open Text File')
@@ -97,12 +98,13 @@ class Machine(QWidget):
         grid = QGridLayout()
         grid.setSpacing(2)
 
-        for i in range(self.Q):
-            if i == self.start:
+
+        for i in range(self.machine.getQ()):
+            if i == self.machine.getStart():
                 state = State('yellow', self)
-            elif i== self.accept:
+            elif i== self.machine.getAccept():
                 state = State('green', self)
-            elif i== self.reject:
+            elif i== self.machine.getReject():
                 state = State('red', self)
             else:
                 state = State('white', self)
@@ -167,7 +169,7 @@ class Machine(QWidget):
         if fileName:
             # Reset the maze
             self.resetMachine()
-            
+            Q, sigma, start,  accept, reject, delta = readMachine = ReadMachine(fileName)
 
     def validateMachineDefinition(self, code):
         if code == 0:

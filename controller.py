@@ -1,6 +1,6 @@
 from queue import Queue
 import sys
-
+from model import *
 """
 
     Author : Ralph Dawson G. Pineda
@@ -30,6 +30,11 @@ import sys
                         -  set of all transition functions
 
 """
+def controller(self):
+    def __init__(self, model, view):
+        self.machine= model
+        self.view = view
+
 
 def readMachine(filename):
     transition_list = []
@@ -46,6 +51,16 @@ def readMachine(filename):
             transition_list.append(transition)
 
     return Q, sigma, start, accept, reject, transition_list
+
+def initializeMachine(Q, sigma, delta, start, accept, reject, machine):
+    if not validateDeterministic(Q, sigma, delta):
+        code = 1
+    elif not validateTransition(sigma,delta, Q, accept, reject):
+        code = 2
+   else:
+        code = 0
+        
+    return code
 
 """
 
