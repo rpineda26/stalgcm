@@ -6,14 +6,15 @@ from model import *
     Author : Ralph Dawson G. Pineda
     Section : STALGCM S13
     Model : 2-way Deterministic Finite Automata
-    Todo:  verification of integrity of text input
-    checklist:      do both start and final states exist in Q
-                    does every element from every transition function exist in Q and sigma and directions   (directions = left, right by default)
-                    does every state have a transition function for all symbols defined in sigma (deterministic fa)
+    Todo checklist:     
 
                     change return 0 in whichTransition() function to something better
 
                     cases where the machine is stuck in a loop
+                    validation for 
+
+                    validation for uniqueness of state name and symbols
+                    fix for updating colors
 """ 
 
 """
