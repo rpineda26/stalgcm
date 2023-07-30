@@ -46,7 +46,7 @@ class Machine(QWidget):
 
         self.machine = None
         self.word= None
-        self.current_state = None
+        self.curr_state = None
         self.head = None
         self.direction =None
         self.accepted = None
@@ -108,7 +108,7 @@ class Machine(QWidget):
         grid = QGridLayout()
         grid.setSpacing(2)
 
-
+        self.inputWordButton.setEnabled(True)
         for i in self.machine.getQ():
             if i == self.machine.getStart():
                 state = State('yellow', self)
@@ -131,7 +131,7 @@ class Machine(QWidget):
         """
         self.machine = None
         self.word = None
-        self.current_state = None
+        self.curr_state = None
         self.head = None
         self.direction = None
         self.accepted = None
@@ -141,11 +141,8 @@ class Machine(QWidget):
         if self.vbox.count() > 1:
             self.vbox.layout().removeItem(self.vbox.itemAt(2))
             self.vbox.layout().removeItem(self.vbox.itemAt(1))
-        
-        self.inputWordButton.setEnabled(True)
         self.stepButton.setEnabled(False)
         self.startButton.setEnabled(False)
-        self.openTextFileButton.setEnabled(True)
 
     def openFileNameDialog(self):
         """
@@ -264,16 +261,36 @@ class Machine(QWidget):
 
     def resetColor(self):
         state = self.findChild(State, f'state{self.prev_state}')
-        if self.curr_state == self.machine.getStart():
+        if self.prev_state == self.machine.getStart():
             state.color = "yellow"
-        elif self.curr_state == self.machine.getAccept:
+        elif self.prev_state == self.machine.getAccept():
             state.color = "green"
-        elif self.curr_state == self.machine.getReject():
+        elif self.prev_state == self.machine.getReject():
             state.color = "red"
         else:
             state.color = "white"
         state.update()
-
+    def resetWord(self):
+        for q in self.machine.getQ():
+            state = self.findChild(State, f'state{q}')
+            if q == self.machine.getStart():
+                state.color = "yellow"
+            elif q == self.machine.getAccept():
+                state.color = "green"
+            elif q == self.machine.getReject():
+                state.color = "red"
+            else:
+                state.color = "white"
+            state.update()
+            self.curr_state = self.machine.getStart()
+            self.prev_state = self.curr_state
+            self.head = 0
+            self.word =""
+            self.direction = "right"
+            self.startButton.setEnabled(False)
+            self.stepButton.setEnabled(False)
+            self.inputWordButton.setEnabled(True)
+            self.openTextFileButton.setEnabled(True)
     def showEndMessage(self, accept):
         message = QMessageBox()
         title = ""
@@ -290,7 +307,7 @@ class Machine(QWidget):
         message.setStandardButtons(QMessageBox.Ok)
 
         message.exec_()
-        self.resetMachine()
+        self.resetWord()
 
     def showNoGoalMessage(self, err):
         message = QMessageBox()
