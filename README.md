@@ -44,11 +44,11 @@ python3 main.py
    - '-' is reserved for the left end marker
    - '+' is reserved for the right end marker
    - if your string input uses these symbols, replace them with some other symbol.
-  
-2. transition function reading left end marker '-' as input should always result to 'right' direction
-3. transition function reading right end marker '+' as input should always result to 'left' direction
-4. transition function from the accepting state should never move into another non accepting state
-5. transition function from the reject state should enver move into another non reject state
+2. state names should be unique
+3. transition function reading left end marker '-' as input should always result to 'right' direction
+4. transition function reading right end marker '+' as input should always result to 'left' direction
+5. transition function from the accepting state should never move into another non accepting state
+6. transition function from the reject state should enver move into another non reject state
 **Note:These restrictions are automatically validated by the machine.**
   
 ## :dragon: test cases
