@@ -1,7 +1,7 @@
 import sys
 import queue
 import threading
-from PyQt5.QtWidgets import QApplication, QMessageBox, QLabel, QSlider, QFileDialog, QWidget, QGridLayout, QPushButton, QVBoxLayout, QHBoxLayout, QSizePolicy, QLineEdit
+from PyQt5.QtWidgets import QApplication, QMessageBox, QLabel, QSlider, QFileDialog, QWidget, QGridLayout, QPushButton, QVBoxLayout, QHBoxLayout, QSizePolicy, QInputDialog
 from PyQt5.QtGui import QPainter, QColor, QBrush, QFont
 from PyQt5.QtCore import Qt, QTimer
 
@@ -46,31 +46,36 @@ class Machine(QWidget):
         self.machine = None
         self.traverseSpeed = 100
         self.machine = None
+        self.word= None
+        self.current_state = None
+        self.head = None
+        self.direction =None
+        self.accepted = None
+
 
         hbox = QHBoxLayout()
         self.openTextFileButton = QPushButton('Open Text File')
         self.startButton = QPushButton('Start')
         self.stepButton = QPushButton('Step')
-
+        self.inputWordButton = QPushButton('Input Word')
         self.slider_label = QLabel("Traverse Speed")
         self.slider = QSlider(Qt.Horizontal)
         self.slider.setMinimum(0)
         self.slider.setMaximum(3000)
         self.slider.setValue(3000)
-        self.string_input = QLineEdit()
 
         hbox.addWidget(self.openTextFileButton)
         hbox.addWidget(self.startButton)
         hbox.addWidget(self.stepButton)
         hbox.addWidget(self.slider_label)
         hbox.addWidget(self.slider)
-        hbox.addWidget(self.string_input)
+        hbox.addWidget(self.inputWordButton)
 
         self.openTextFileButton.clicked.connect(self.openFileNameDialog)
         self.startButton.clicked.connect(self.quickStep)
         self.stepButton.clicked.connect(self.nextStep)
         self.slider.valueChanged.connect(self.changeTraverseSpeed)
-        self.string_input.connect(self.setInput)
+        self.inputWordButton.connect(self.setInput)
 
         self.vbox = QVBoxLayout()
         self.vbox.addLayout(hbox)
@@ -153,6 +158,7 @@ class Machine(QWidget):
         Reset the maze
         """
         self.machine = None
+        self.word = None
         self.slider.setValue(3000)
 
         # Remove the old grid
@@ -196,16 +202,29 @@ class Machine(QWidget):
         return flag_create_machine
 
     def setInput(self):
+         name, done1 = QInputDialog.getText(self, 'Input Word', 'Enter a word:')
+         if done1:
+            self.word = name
+
          self.startButton.setEnabled(True)
          self.stepButton.setEnabled(True)
          self.slider.setEnabled(True)
+         self.word = self.string_input.text()
     def startFind(self):
         """
         Start the path finding algorithm
         """
         self.openTextFileButton.setEnabled(False)
-        self.path_list = find_path(self.distances, self.start, self.goal)
-        self.update_colors()
+        self.inputWordButton.setEnabled(False)
+        self.startButton.setEnabled(False)
+        self.stepButton.setEnabled(True)
+  
+        self.head=0 # this is the pointer to which character will be read from the word 
+        self.curr_state = self.machine.getStart()
+        self.accepted = False
+        self.direction = "right"
+        #show current state
+        
 
     def changeTraverseSpeed(self, value):
         """
@@ -217,45 +236,41 @@ class Machine(QWidget):
         self.traverseSpeed = 3000 - value
 
     def stepFind(self):
-        if self.path_list is None:
-            self.path_list = find_path(self.distances, self.start, self.goal)
-
+        
         """
         Step through the node traversal
         """
-        if len(self.path_list) > 0:
-            coord = self.path_list.pop(0)
-            i, j = coord
-
-            if self.goal[0] == i and self.goal[1] == j:
-                pass
-            elif self.start[0] == i and self.start[1] == j:
-                pass
-            else:
-                square = self.findChild(Square, f'square{i * self.size + j}')
-                square.color = 'yellow'
-                square.update()
-
+        if validateSymbol(self.word[self.head], self.machine.getSigma()):
+            self.curr_state, self.direction = nextStep(self.machine.getDelta(), self.curr_state, self.word[self.head])
+        else: #display error symbol does not exist in sigma
+            pass
+        if self.direction =="left":
+            self.head -=1
         else:
-            self.showGoalMessage()
+            self.head +=1
+        if isEnd(self.curr_state, self.machine.getAccept(), self.machine.getReject()):
+            if isAccepted(self.curr_state, self.machine.getAccept()):
+                self.accepted = True
+                #show accept message
+            else:
+                #show reject message
+                self.accepted = False
+            self.showEndMessage(self.accepted)
+        #display current state
 
-    def showGoalMessage(self):
+    def showEndMessage(self, accept):
         message = QMessageBox()
-
+        title = ""
+        msg = ""
         message.setIcon(QMessageBox.Information)
-        message.setWindowTitle("Goal Reached!")
-        message.setText(
-            "Goal has been reached! Reset the maze by selecting a new text file.")
-        message.setStandardButtons(QMessageBox.Ok)
-
-        message.exec_()
-
-    def showNoGoalMessage(self, err):
-        message = QMessageBox()
-
-        message.setIcon(QMessageBox.Information)
-        message.setWindowTitle("Invalid Machine!")
-        message.setText(err)
+        if accept:
+            title = "Accepted"
+            msg = f'The word {self.word} has been accepted by the provided machine!'
+        else:
+            title = "Rejected"
+            msg = f'The word {self.word} has been rejected by the provided machine!'
+        message.setWindowTitle(title)
+        message.setText(msg)
         message.setStandardButtons(QMessageBox.Ok)
 
         message.exec_()

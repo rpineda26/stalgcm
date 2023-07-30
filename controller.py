@@ -46,7 +46,20 @@ def readMachine(filename):
             transition_list.append(transition)
 
     return Q, sigma, start, accept, reject, transition_list
-
+"""
+@definition: This function is called after receiving the machine definition through file input. It first checks 
+                if the machine definition complies with all the rules of a 2-way dfa. Then it instantiates a 2-way dfa
+                object if the machine definition is valid.
+@params:    Q  -  set of all states
+            sigma  -  the alphabet of all symbols to be read
+            start  -  the start state from Q
+            final  -  the acceptance state from Q
+            reject  -  the reject state from Q
+            delta  -  set of all transition functions
+                   -  transition function: (current state, input, next state, direction)
+@returns:   code  -  the validity of the machine, can point out which part of the machine definition is invalid
+            machine  -  the 2-way dfa object if the machine definition is valid, None otherwise
+"""
 def initializeMachine(Q, sigma, delta, start, accept, reject):
     if not validateDeterministic(Q, sigma, delta):
         code = 1
@@ -343,30 +356,4 @@ def displayAction(state, input, string, head):
     print("Word Input: " +string)
     print("head: "+head)
 
-def main():
-    Q, sigma, start, accept, reject, list_transition = readMachine("/tests/test.txt")
-    #Q, sigma will be included once the verification is accomplished
-    word = input("Enter Word: ")
-    word = attachEndMarker(word)
-    if validateTransition(sigma, list_transition, Q, accept, reject) and validateDeterministic(Q, sigma, list_transition):
-        print("Machine is valid")
-    else:
-        print("Machine is invalid")
-        return 0
-
-    """
-    print("start: "  + start)
-    print("accept: " + accept)
-    print("reject: " + reject)
-    for i in list_transition:
-        print(i)
-     """
-    accepted = allStep(list_transition, start, accept, reject, word, sigma)
-    if(accepted):
-        print("Accepted")
-    else:
-        print("Rejected")
-
-
-if __name__ == "__main__":
     main()
