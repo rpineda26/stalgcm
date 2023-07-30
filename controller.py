@@ -47,15 +47,18 @@ def readMachine(filename):
 
     return Q, sigma, start, accept, reject, transition_list
 
-def initializeMachine(Q, sigma, delta, start, accept, reject, machine):
+def initializeMachine(Q, sigma, delta, start, accept, reject):
     if not validateDeterministic(Q, sigma, delta):
         code = 1
+        machine = None
     elif not validateTransition(sigma,delta, Q, accept, reject):
         code = 2
+        machine = None
     else:
         code = 0
+        machine = Machine_2DFA(Q, sigma, delta, start, accept, reject)
         
-    return code
+    return code, machine
 
 """
 

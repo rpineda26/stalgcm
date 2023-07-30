@@ -1,14 +1,15 @@
 import sys
 import queue
 import threading
-from PyQt5.QtWidgets import QMessageBox, QLabel, QSlider, QFileDialog, QWidget, QGridLayout, QPushButton, QVBoxLayout, QHBoxLayout, QSizePolicy, QLineEdit
+from PyQt5.QtWidgets import QApplication, QMessageBox, QLabel, QSlider, QFileDialog, QWidget, QGridLayout, QPushButton, QVBoxLayout, QHBoxLayout, QSizePolicy, QLineEdit
 from PyQt5.QtGui import QPainter, QColor, QBrush, QFont
 from PyQt5.QtCore import Qt, QTimer
 
 from controller import *
 from model import *
 class State(QWidget):
-    def __init__(self, color):
+    def __init__(self, color, parent=None):
+        super().__init__(paren=parent)
         self.color= color
         self.label = QLabel(self)
         self.label.setAlignment(Qt.AlignCenter)
@@ -35,7 +36,7 @@ class State(QWidget):
         self.label.setGeometry(int(x), int(y), label_width, label_height)
 
 class Machine(QWidget):
-    def __init__(self,machine):
+    def __init__(self):
         super().__init__()
         self.setWindowTitle('2-Way Deterministic Finite Automata')
         self.setFixedWidth(720)
@@ -169,17 +170,22 @@ class Machine(QWidget):
         if fileName:
             # Reset the maze
             self.resetMachine()
-            self.machine.reset()
-            Q, sigma, start,  accept, reject, delta = readMachine = ReadMachine(fileName)
+            Q, sigma, start,  accept, reject, delta =  readMachine(fileName)
+            code, machine = initializeMachine(Q, sigma, start, accept, reject, delta)
+            flag_create_machine = self.validateMachineDefinition(code)
+            if flag_create_machine:
+                self.machine = machine
+
 
     def validateMachineDefinition(self, code):
+        flag_create_machine = False
         if code == 0:
             self.string_input.setEnabled(True)
             self.createGrid()
-            self.addDistancesText()
+            flag_create_machine = True
         else:
             if code ==1:
-                err = "invalid transition function"
+                err = "Invalid transition function"
             elif code ==2:
                 err = "Machine is not deterministic"
             self.showNoGoalMessage(err)
@@ -187,7 +193,7 @@ class Machine(QWidget):
             self.stepButton.setEnabled(False)
             self.slider.setEnabled(False)
             self.string_input.setEnabled(False)
-
+        return flag_create_machine
 
     def setInput(self):
          self.startButton.setEnabled(True)
@@ -253,3 +259,9 @@ class Machine(QWidget):
         message.setStandardButtons(QMessageBox.Ok)
 
         message.exec_()
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    machine = Machine()
+    machine.showMaximized()
+    sys.exit(app.exec_())
