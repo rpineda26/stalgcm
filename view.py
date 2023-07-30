@@ -204,12 +204,10 @@ class Machine(QWidget):
     def setInput(self):
          name, done1 = QInputDialog.getText(self, 'Input Word', 'Enter a word:')
          if done1:
-            self.word = name
-
+            self.word = attachEndMarker(name)
          self.startButton.setEnabled(True)
          self.stepButton.setEnabled(True)
          self.slider.setEnabled(True)
-         self.word = self.string_input.text()
     def startFind(self):
         """
         Start the path finding algorithm
@@ -257,7 +255,8 @@ class Machine(QWidget):
                 self.accepted = False
             self.showEndMessage(self.accepted)
         #display current state
-
+    def showState(self):
+        pass
     def showEndMessage(self, accept):
         message = QMessageBox()
         title = ""
