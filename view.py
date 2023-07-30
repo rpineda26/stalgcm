@@ -279,9 +279,10 @@ class Machine(QWidget):
         """
         Step through the node traversal
         """
-        self.resetColor()
+        
         if validateSymbol(self.word[self.head], self.machine.getSigma()):
             self.prev_state = self.curr_state
+            self.resetColor()
             self.curr_state, self.direction, transition_used = nextStep(self.machine.getDelta(), self.curr_state, self.word[self.head])
             self.showCurrentState(transition_used)
         else: #display error symbol does not exist in sigma
@@ -333,6 +334,7 @@ class Machine(QWidget):
             state.color = "red"
         else:
             state.color = "white"
+        state.update()
         state.update()
     """
     @definition: This function resets the word, the head, the current state, and the previous state to their initial values
