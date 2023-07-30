@@ -38,7 +38,9 @@ def readMachine(filename):
         Q = f.readline().split()
         sigma = f.readline().split()
         read_states = f.readline().split()
-        start, accept, reject = read_states
+        start = read_states[0]
+        accept = read_states[1]
+        reject = read_states[2]
         while True:
             transition = f.readline().split()
             if not transition:
@@ -73,75 +75,6 @@ def initializeMachine(Q, sigma, delta, start, accept, reject):
         
     return code, machine
 
-"""
-
-@definition: This step by step traces the machine's process as the word is being read per symbol
-@params:  list_transition  -  set of all transition functions defined in the machine definition
-          start  -  start state
-          accept = accept state
-          reject = reject state
-          word = the string word to be read
-@returns: accepted  - is word accepted in the 2-way dfa defined in the machine definition via text file
-
-"""
-
-def allStep(list_transition, start, accept, reject, word, sigma):
-    flag=  True
-    head=0 # this is the pointer to which character will be read from the word 
-    curr_state = start
-    accepted = False
-    while(flag):
-        _ = input("Step: ")
-        if validateSymbol(word[head], sigma):
-            curr_state, direction = nextStep(list_transition, curr_state, word[head])
-        else:
-            return False
-        if direction =="left":
-            head -=1
-        else:
-            head +=1
-        if isEnd(curr_state, accept, reject):
-            flag = False
-            if isAccepted(curr_state, accept):
-                accepted = True
-        displayAction(curr_state, word[head], word, head)
-    return accepted
-
-"""
-
-@definition: This gives accepts a list of string inputs and determines whether each string
-                is accepted or rejected by the machine
-@params:  list_transition  -  set of all transition functions defined in the machine definition
-            start  -  start state
-            accept = accept state
-            reject = reject state
-            words = list of words to be read
-@returns: accepted  - a list of booleans where true is for accepted and false otherwise
-
-"""
-
-def quickStep(list_transition, start, accept, reject, words, sigma):
-    accepted = []
-    for word in words:
-        flag=  True
-        head=0 # this is the pointer to which character will be read from the word 
-        curr_state = start
-        while(flag):
-            if validateSymbol(word[head], sigma):
-                curr_state, direction = nextStep(list_transition, curr_state, word[head])
-            else:
-                return False
-            if direction =="left":
-                head -=1
-            else:
-                head +=1
-            if isEnd(curr_state, accept, reject):
-                flag = False
-                if isAccepted(curr_state, accept):
-                    accepted.append(True)
-            displayAction(curr_state, word[head], word, head)
-            accepted.append(False)
-    return accepted
 
 """
 
@@ -159,7 +92,7 @@ def nextStep(list_transition, state, input):
     for i in filtered_list:
         _, req_input, next_state, direction = i
         if req_input == input:
-            return next_state, direction
+            return next_state, direction, i
         
 """
 
@@ -205,7 +138,10 @@ def whichTransition_Exact(list_transition, input):
 """
 
 def validateSymbol(character, sigma):
-    if character in sigma:
+    extended_sigma = ['-','+']
+    for i in sigma:
+        extended_sigma.append(i)
+    if character in extended_sigma:
         return True
     else:
         print("Invalid input : input not in alphabet")
@@ -233,37 +169,40 @@ definition: This checks the all transition functions in the
 
 """
 def validateTransition(sigma, list_transition, Q, accept, reject):
-    extended_sigma =('-','+')
-    extended_sigma.append(sigma)
+    extended_sigma = ['-','+']
+    for i in sigma:
+        extended_sigma.append(i)
+
     for i in list_transition:
         state, req_input, state2, direction = i
         if req_input not in extended_sigma:
             print("Invalid transition function : input not in alphabet")
-            print("transition function in question: "+ i)
+            print("transition function in question: "+ str(i))
             return False
         if state not in Q:
             print("Invalid transition function : current state not in set of states")
-            print("transition function in question: "+ i)
+            print("transition function in question: "+ str(i))
             return False
         if state2 not in Q:
-            print("Invalid transition function : next state not in set of states")
-            print("transition function in question: "+ i)
-            return False
+            if state2 != 'NA':
+                print("Invalid transition function : next state not in set of states")
+                print("transition function in question: "+ str(i))
+                return False
         if state == accept and state2 != accept:
             print("Invalid transition function : accept state cannot have an outgoing transition")
-            print("transition function in question: "+ i)
+            print("transition function in question: "+ str(i))
             return False
         if state == reject and state2 != reject:
             print("Invalid transition function : reject state cannot have an outgoing transition")
-            print("transition function in question: "+ i)
+            print("transition function in question: "+ str(i))
             return False
         if req_input == '-'and direction == 'left':
             print("Invalid transition function : cannot move left from left end marker")
-            print("transition function in question: "+ i)
+            print("transition function in question: "+ str(i))
             return False
         if req_input == '+'and direction == 'right':
             print("Invalid transition function : cannot move right from right end marker")
-            print("transition function in question: "+ i)
+            print("transition function in question: "+ str(i))
             return False
     return True
 
@@ -280,16 +219,21 @@ def validateTransition(sigma, list_transition, Q, accept, reject):
 """
 
 def validateDeterministic(Q, sigma, list_transition):
-    extended_sigma = ('-','+')
-    extended_sigma.append(sigma)
+    extended_sigma = ['-','+']
+    for i in sigma:
+        extended_sigma.append(i)
+    flag = False
     for state in Q:
         transitions = filterTransistionList(list_transition, state)
         for i in extended_sigma:
-            if i not in transitions:
-                print("Machine is not deterministic")
+            flag = False
+            for t in transitions:
+                _, req_input, _, _ = t
+                if req_input == i:
+                    flag = True
+            if flag == False:
                 print("state "+ state+" has no transition for input "+ i)
-                return False
-    return True
+    return flag
 
 """
 

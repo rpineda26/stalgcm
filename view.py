@@ -1,7 +1,7 @@
 import sys
 import queue
 import threading
-from PyQt5.QtWidgets import QApplication, QMessageBox, QLabel, QSlider, QFileDialog, QWidget, QGridLayout, QPushButton, QVBoxLayout, QHBoxLayout, QSizePolicy, QInputDialog
+from PyQt5.QtWidgets import QApplication, QMessageBox, QLabel, QFileDialog, QWidget, QGridLayout, QPushButton, QVBoxLayout, QHBoxLayout, QSizePolicy, QInputDialog
 from PyQt5.QtGui import QPainter, QColor, QBrush, QFont
 from PyQt5.QtCore import Qt, QTimer
 
@@ -9,7 +9,7 @@ from controller import *
 from model import *
 class State(QWidget):
     def __init__(self, color, parent=None):
-        super().__init__(paren=parent)
+        super().__init__(parent=parent)
         self.color= color
         self.label = QLabel(self)
         self.label.setAlignment(Qt.AlignCenter)
@@ -43,14 +43,14 @@ class Machine(QWidget):
         self.setFixedHeight(720)
         self.size = None
         self.fileName = None
-        self.machine = None
-        self.traverseSpeed = 100
+
         self.machine = None
         self.word= None
         self.current_state = None
         self.head = None
         self.direction =None
         self.accepted = None
+        self.prev_state = None
 
 
         hbox = QHBoxLayout()
@@ -58,24 +58,20 @@ class Machine(QWidget):
         self.startButton = QPushButton('Start')
         self.stepButton = QPushButton('Step')
         self.inputWordButton = QPushButton('Input Word')
-        self.slider_label = QLabel("Traverse Speed")
-        self.slider = QSlider(Qt.Horizontal)
-        self.slider.setMinimum(0)
-        self.slider.setMaximum(3000)
-        self.slider.setValue(3000)
 
         hbox.addWidget(self.openTextFileButton)
         hbox.addWidget(self.startButton)
         hbox.addWidget(self.stepButton)
-        hbox.addWidget(self.slider_label)
-        hbox.addWidget(self.slider)
         hbox.addWidget(self.inputWordButton)
 
         self.openTextFileButton.clicked.connect(self.openFileNameDialog)
-        self.startButton.clicked.connect(self.quickStep)
-        self.stepButton.clicked.connect(self.nextStep)
-        self.slider.valueChanged.connect(self.changeTraverseSpeed)
-        self.inputWordButton.connect(self.setInput)
+        self.startButton.clicked.connect(self.startFind)
+        self.stepButton.clicked.connect(self.stepFind)
+        self.inputWordButton.clicked.connect(self.setInput)
+
+        self.inputWordButton.setEnabled(False)
+        self.stepButton.setEnabled(False)
+        self.startButton.setEnabled(False)
 
         self.vbox = QVBoxLayout()
         self.vbox.addLayout(hbox)
@@ -85,6 +81,14 @@ class Machine(QWidget):
         size = min(self.width(), self.height()) - 50
         for state in self.findChildren(State):
             state.setMinimumSize(size // self.size, size // self.size)
+
+
+        self.curr_state_label = QLabel("Current State: ")
+        self.head_label = QLabel("Head: ")
+        self.word_label = QLabel("Word: ")
+        self.transition_label = QLabel("Transition used: ")
+        self.direction_label = QLabel("Read Direction: ")
+     
 
     def resizeEvent(self, event):
         """
@@ -105,7 +109,7 @@ class Machine(QWidget):
         grid.setSpacing(2)
 
 
-        for i in range(self.machine.getQ()):
+        for i in self.machine.getQ():
             if i == self.machine.getStart():
                 state = State('yellow', self)
             elif i== self.machine.getAccept():
@@ -116,42 +120,10 @@ class Machine(QWidget):
                 state = State('white', self)
             state.set_text(i)
             state.setObjectName(f'state{i}')
-            grid.addWidget(state, i)
+            grid.addWidget(state)
 
         self.vbox.addLayout(grid)
 
-    def update_colors(self):
-        """
-        Timer function to update the colors of the optimal path
-        """
-        self.color_index = 0
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.update_state_color)
-        self.timer.start(self.traverseSpeed)
-
-    def update_state_color(self):
-        """
-        Update the colors of the optimal path
-        """
-        if self.color_index >= len(self.path_list):
-            self.timer.stop()
-            self.openTextFileButton.setEnabled(True)
-            self.showGoalMessage()
-            return
-
-        coord = self.path_list[self.color_index]
-        i, j = coord
-
-        if self.goal[0] == i and self.goal[1] == j:
-            pass
-        elif self.start[0] == i and self.start[1] == j:
-            pass
-        else:
-            square = self.findChild(Square, f'square{i * self.size + j}')
-            square.color = 'yellow'
-            square.update()
-
-        self.color_index += 1
 
     def resetMachine(self):
         """
@@ -159,11 +131,21 @@ class Machine(QWidget):
         """
         self.machine = None
         self.word = None
-        self.slider.setValue(3000)
+        self.current_state = None
+        self.head = None
+        self.direction = None
+        self.accepted = None
+        self.prev_state = None
 
-        # Remove the old grid
+        # Remove the old grid and status box
         if self.vbox.count() > 1:
+            self.vbox.layout().removeItem(self.vbox.itemAt(2))
             self.vbox.layout().removeItem(self.vbox.itemAt(1))
+        
+        self.inputWordButton.setEnabled(True)
+        self.stepButton.setEnabled(False)
+        self.startButton.setEnabled(False)
+        self.openTextFileButton.setEnabled(True)
 
     def openFileNameDialog(self):
         """
@@ -177,17 +159,17 @@ class Machine(QWidget):
             # Reset the maze
             self.resetMachine()
             Q, sigma, start,  accept, reject, delta =  readMachine(fileName)
-            code, machine = initializeMachine(Q, sigma, start, accept, reject, delta)
+            code, machine = initializeMachine(Q, sigma, delta, start, accept, reject)
             flag_create_machine = self.validateMachineDefinition(code)
             if flag_create_machine:
                 self.machine = machine
+                self.createGrid()
 
 
     def validateMachineDefinition(self, code):
         flag_create_machine = False
         if code == 0:
-            self.string_input.setEnabled(True)
-            self.createGrid()
+            self.inputWordButton.setEnabled(True)
             flag_create_machine = True
         else:
             if code ==1:
@@ -197,8 +179,7 @@ class Machine(QWidget):
             self.showNoGoalMessage(err)
             self.startButton.setEnabled(False)
             self.stepButton.setEnabled(False)
-            self.slider.setEnabled(False)
-            self.string_input.setEnabled(False)
+            self.inputWordButton.setEnabled(False)
         return flag_create_machine
 
     def setInput(self):
@@ -207,7 +188,6 @@ class Machine(QWidget):
             self.word = attachEndMarker(name)
          self.startButton.setEnabled(True)
          self.stepButton.setEnabled(True)
-         self.slider.setEnabled(True)
     def startFind(self):
         """
         Start the path finding algorithm
@@ -219,34 +199,47 @@ class Machine(QWidget):
   
         self.head=0 # this is the pointer to which character will be read from the word 
         self.curr_state = self.machine.getStart()
+        self.prev_state = self.curr_state
         self.accepted = False
         self.direction = "right"
+
+        self.curr_state_label.setText("Current State: " + self.curr_state)
+        self.head_label.setText("Head: " + str(self.head))
+        if len(self.word) ==0:
+            self.word_label.setText("Word: " + self.word)
+        else:
+            self.word_label.setText("Word: " + self.word[:self.head]+"   " +self.word[self.head]+"   " +self.word[self.head+1:])
+        statusBox = QHBoxLayout()
+        statusBox.addWidget(self.curr_state_label)
+        statusBox.addWidget(self.head_label)
+        statusBox.addWidget(self.word_label)
+        statusBox.addWidget(self.transition_label)
+        statusBox.addWidget(self.direction_label)
+        self.vbox.addLayout(statusBox)
+
+        
         #show current state
         
 
-    def changeTraverseSpeed(self, value):
-        """
-        Changes the speed of the node traversal (slowest speed is 3000ms)
-
-        Input: 
-        - value - the value of the slider
-        """
-        self.traverseSpeed = 3000 - value
 
     def stepFind(self):
         
         """
         Step through the node traversal
         """
+        self.resetColor()
         if validateSymbol(self.word[self.head], self.machine.getSigma()):
-            self.curr_state, self.direction = nextStep(self.machine.getDelta(), self.curr_state, self.word[self.head])
+            self.prev_state = self.curr_state
+            self.curr_state, self.direction, transition_used = nextStep(self.machine.getDelta(), self.curr_state, self.word[self.head])
+            self.showCurrentState(transition_used)
         else: #display error symbol does not exist in sigma
-            pass
+            self.showNoGoalMessage("Symbol "+self.word[self.head]+" does not exist in sigma")
         if self.direction =="left":
             self.head -=1
         else:
             self.head +=1
-        if isEnd(self.curr_state, self.machine.getAccept(), self.machine.getReject()):
+
+        if isEnd(self.curr_state, self.machine.getAccept(), self.machine.getReject(), self.word[self.head]):
             if isAccepted(self.curr_state, self.machine.getAccept()):
                 self.accepted = True
                 #show accept message
@@ -254,9 +247,33 @@ class Machine(QWidget):
                 #show reject message
                 self.accepted = False
             self.showEndMessage(self.accepted)
-        #display current state
-    def showState(self):
-        pass
+        
+    def showCurrentState(self, transition_used):
+        self.curr_state_label.setText("Current State: " + self.curr_state)
+        self.head_label.setText("Head: " + str(self.head))
+        if len(self.word) ==0:
+            self.word_label.setText("Word: " + self.word)
+        else:
+            self.word_label.setText("Word: " + self.word[:self.head]+"   "+ self.word[self.head]+ "   " +self.word[self.head+1:])
+        self.direction_label.setText("Direction: " + self.direction)
+        self.transition_label.setText("Transition Used: " + ' '.join(map(str,transition_used)))
+        self.direction_label.setText("Direction: " + self.direction)
+        state =self.findChild(State, f'state{self.curr_state}')
+        state.color = "blue"
+        state.update()
+
+    def resetColor(self):
+        state = self.findChild(State, f'state{self.prev_state}')
+        if self.curr_state == self.machine.getStart():
+            state.color = "yellow"
+        elif self.curr_state == self.machine.getAccept:
+            state.color = "green"
+        elif self.curr_state == self.machine.getReject():
+            state.color = "red"
+        else:
+            state.color = "white"
+        state.update()
+
     def showEndMessage(self, accept):
         message = QMessageBox()
         title = ""
@@ -273,9 +290,13 @@ class Machine(QWidget):
         message.setStandardButtons(QMessageBox.Ok)
 
         message.exec_()
+        self.resetMachine()
 
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    machine = Machine()
-    machine.showMaximized()
-    sys.exit(app.exec_())
+    def showNoGoalMessage(self, err):
+        message = QMessageBox()
+        message.setIcon(QMessageBox.Information)
+        message.setWindowTitle("Invalid Machine!")
+        message.setText(err)
+        message.setStandardButtons(QMessageBox.Ok)
+
+        message.exec_()

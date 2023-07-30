@@ -1,11 +1,11 @@
 class Machine_2DFA:
     def __init__(self, Q, sigma, delta, start, accept, reject):
-        self.Q = None
-        self.sigma = None
-        self.delta = None
-        self.start = None
-        self.accept = None
-        self.reject = None
+        self.Q = Q
+        self.sigma = sigma
+        self.delta = delta
+        self.start = start
+        self.accept =  accept
+        self.reject = reject
     """
     getters for the DFA
     """
