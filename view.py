@@ -1,13 +1,26 @@
-import sys
-import queue
-import threading
-from PyQt5.QtWidgets import QApplication, QMessageBox, QLabel, QFileDialog, QWidget, QGridLayout, QPushButton, QVBoxLayout, QHBoxLayout, QSizePolicy, QInputDialog
+"""
+Author: Ralph Dawson G. Pineda
+Section: STALGCM S13
+Date: July 2023
+Description: This file contains the view of the program. Make sure that the dependencies are installed in your device. Read the README.md for more information.
+"""
+from PyQt5.QtWidgets import QMessageBox, QLabel, QFileDialog, QWidget, QGridLayout, QPushButton, QVBoxLayout, QHBoxLayout, QSizePolicy, QInputDialog
 from PyQt5.QtGui import QPainter, QColor, QBrush, QFont
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtCore import Qt
 
 from controller import *
 from model import *
+
+"""
+@definition: This class is the view representation of a state in the machine. It is color coded to determine which type of state it is.
+@param: color - the color of the state: yellow for start, green for accept, red for reject, and white for normal
+
+"""
 class State(QWidget):
+    """
+    @definition: This is the constructor of the State class
+    @param: color - the color of the state: yellow for start, green for accept, red for reject, and white for normal
+    """
     def __init__(self, color, parent=None):
         super().__init__(parent=parent)
         self.color= color
@@ -15,13 +28,25 @@ class State(QWidget):
         self.label.setAlignment(Qt.AlignCenter)
         self.label.setFont(QFont("Arial", 10))
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+    """
+    @definition: This function paints the state with the color specified in the constructor
+    @param: event - the event that triggers the paintEvent
+    """
     def paintEvent(self,event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setBrush(QBrush(QColor(self.color)))
         painter.drawRect(self.rect())
+    """
+    @definition: This function sets the name of the state. It can reference the state it represents through its name.
+    @param: text - the name of the state
+    """
     def set_text(self, text):
         self.label.setText(text)
+    """
+    @definition: This function resizes the state to fit the window
+    @param: event - the event that triggers the resizeEvent
+    """
     def resizeEvent(self, event):
         self.label.setGeometry(self.rect())
 
@@ -34,6 +59,17 @@ class State(QWidget):
         y = (square_height - label_height) / 2
 
         self.label.setGeometry(int(x), int(y), label_width, label_height)
+
+"""
+@definition : This class is the view representation of the entire machine. The flow of user input is: (open text file -> (input word -> start -> step *)*)*) where * means repetition
+@attributes: machine - the DFA that is being represented by the view
+            word - the word that is being inputted by the user
+            curr_state - the current state of the machine
+            head - the current character in the world that is being processed
+            direction - the reading direction for the next input
+            accepted - the boolean value that determines if the machine has accepted the word
+            prev_state - the previous state of the machine
+"""
 
 class Machine(QWidget):
     def __init__(self):
@@ -89,18 +125,21 @@ class Machine(QWidget):
         self.transition_label = QLabel("Transition used: ")
         self.direction_label = QLabel("Read Direction: ")
      
-
+    """
+    @definition: This function makes the states size dynamic depending on the window size
+    @param: event - the event that triggers the resizeEvent
+    """
     def resizeEvent(self, event):
-        """
-        Makes the squares responsive to the size of the window
-        """
+
         size = min(self.width(), self.height()) - 50
 
         for state in self.findChildren(State):
             state.setMinimumSize(size // self.size, size // self.size)
 
         self.update()
-
+    """
+    @definition: This function creates a grid to hold views the states of the machine
+    """
     def createGrid(self):
         """
         Create a grid of squares for the maze
@@ -124,11 +163,11 @@ class Machine(QWidget):
 
         self.vbox.addLayout(grid)
 
-
+    """
+    @definition: This function resets the attributes of the object instance of this 
+                    class to read a new machine definition file
+    """
     def resetMachine(self):
-        """
-        Reset the maze
-        """
         self.machine = None
         self.word = None
         self.curr_state = None
@@ -143,7 +182,12 @@ class Machine(QWidget):
             self.vbox.layout().removeItem(self.vbox.itemAt(1))
         self.stepButton.setEnabled(False)
         self.startButton.setEnabled(False)
-
+    """
+    @definition: This function reads the machine definition file and creates a DFA object
+                  Through this same function, the file is read and validated for errors.
+                  In case of no errors, an object of the 2DFA is instantiated and its states
+                  will be represented in a grid.    
+    """
     def openFileNameDialog(self):
         """
         Opens a file dialog to select a text file
@@ -162,7 +206,12 @@ class Machine(QWidget):
                 self.machine = machine
                 self.createGrid()
 
-
+    """
+    @definition: This function validates the machine definition file for errors
+    @param: code - determines the status of the machine definition file. If it is invalid
+                    then the code will determine which type of error was committed
+    @return - flag_create_machine - determines if the machine definition file is valid
+    """
     def validateMachineDefinition(self, code):
         flag_create_machine = False
         if code == 0:
@@ -178,21 +227,26 @@ class Machine(QWidget):
             self.stepButton.setEnabled(False)
             self.inputWordButton.setEnabled(False)
         return flag_create_machine
-
+    """
+    @definition: This opens a display for getting the user input on which word is to be checked"""
     def setInput(self):
          name, done1 = QInputDialog.getText(self, 'Input Word', 'Enter a word:')
          if done1:
             self.word = attachEndMarker(name)
          self.startButton.setEnabled(True)
-         self.stepButton.setEnabled(True)
+    """
+    @definition: This function is called when the user clicks the start button. It will
+                    initialize the values needed to start tracing the transition of states
+    """
     def startFind(self):
         """
         Start the path finding algorithm
         """
         self.openTextFileButton.setEnabled(False)
-        self.inputWordButton.setEnabled(False)
+        self.inputWordButton.setEnabled(True)
         self.startButton.setEnabled(False)
         self.stepButton.setEnabled(True)
+        self.inputWordButton.setEnabled(False)
   
         self.head=0 # this is the pointer to which character will be read from the word 
         self.curr_state = self.machine.getStart()
@@ -216,9 +270,10 @@ class Machine(QWidget):
 
         
         #show current state
-        
-
-
+    """
+    @definition: This function is called when the user clicks the step button. It will follow the appropriate transition depending
+                 on the current state and the input character being read at the moment
+    """
     def stepFind(self):
         
         """
@@ -244,7 +299,10 @@ class Machine(QWidget):
                 #show reject message
                 self.accepted = False
             self.showEndMessage(self.accepted)
-        
+    """
+    @definition: This function updates the views of the status of the machine. it displays the current state, the head, 
+                    the word, the direction, and the transition used
+    """
     def showCurrentState(self, transition_used):
         self.curr_state_label.setText("Current State: " + self.curr_state)
         self.head_label.setText("Head: " + str(self.head))
@@ -259,6 +317,12 @@ class Machine(QWidget):
         state.color = "blue"
         state.update()
 
+    """
+
+    @definition: This function resets the color of the state that 
+                    was colored to be the current state
+
+    """
     def resetColor(self):
         state = self.findChild(State, f'state{self.prev_state}')
         if self.prev_state == self.machine.getStart():
@@ -270,6 +334,10 @@ class Machine(QWidget):
         else:
             state.color = "white"
         state.update()
+    """
+    @definition: This function resets the word, the head, the current state, and the previous state to their initial values
+                This is called when the user wants to check another word
+    """
     def resetWord(self):
         for q in self.machine.getQ():
             state = self.findChild(State, f'state{q}')
@@ -291,6 +359,10 @@ class Machine(QWidget):
             self.stepButton.setEnabled(False)
             self.inputWordButton.setEnabled(True)
             self.openTextFileButton.setEnabled(True)
+    """
+    @definition: This function shows the message when the machine terminates. 
+                 It will display whether the word was accepted or rejected
+    """
     def showEndMessage(self, accept):
         message = QMessageBox()
         title = ""
@@ -308,7 +380,11 @@ class Machine(QWidget):
 
         message.exec_()
         self.resetWord()
-
+    """
+    @definition: This function shows the message when the machine can't be instantiated because
+                the machine definition did not follow all restrictions. It will display the error
+                depenging on whatever caused it.
+    """
     def showNoGoalMessage(self, err):
         message = QMessageBox()
         message.setIcon(QMessageBox.Information)
