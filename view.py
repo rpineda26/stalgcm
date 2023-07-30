@@ -169,6 +169,7 @@ class Machine(QWidget):
         if fileName:
             # Reset the maze
             self.resetMachine()
+            self.machine.reset()
             Q, sigma, start,  accept, reject, delta = readMachine = ReadMachine(fileName)
 
     def validateMachineDefinition(self, code):
