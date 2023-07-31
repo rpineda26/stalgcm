@@ -1,6 +1,7 @@
 from queue import Queue
 import sys
 from model import *
+from math import sqrt
 """
 
     Author : Ralph Dawson G. Pineda
@@ -85,9 +86,9 @@ def initializeMachine(Q, sigma, delta, start, accept, reject):
 """
 
 def validateUniqueStateName(Q):
-    for i in Q:
+    for i in range(len(Q)):
         counter = 0
-        for j in Q:
+        for j in range(len(Q)):
             if i != j:
                 if Q[i] == Q[j]:
                     counter +=1
@@ -223,7 +224,8 @@ def validateTransition(sigma, list_transition, Q, accept, reject):
             print("transition function in question: "+ str(i))
             return False
     return True
-
+def determineGridSize(length):
+    return round(sqrt(length))
 """
 
 @definition: This checks if the machine is deterministic or not. A machine is deterministic if:

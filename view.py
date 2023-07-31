@@ -87,6 +87,7 @@ class Machine(QWidget):
         self.direction =None
         self.accepted = None
         self.prev_state = None
+        self.size = None
 
 
         hbox = QHBoxLayout()
@@ -175,7 +176,7 @@ class Machine(QWidget):
         self.direction = None
         self.accepted = None
         self.prev_state = None
-
+        self.size = None
         # Remove the old grid and status box
         if self.vbox.count() > 1:
             self.vbox.layout().removeItem(self.vbox.itemAt(2))
@@ -204,6 +205,7 @@ class Machine(QWidget):
             flag_create_machine = self.validateMachineDefinition(code)
             if flag_create_machine:
                 self.machine = machine
+                self.size = determineGridSize(len(Q))
                 self.createGrid()
 
     """
