@@ -77,16 +77,9 @@ class Machine(QWidget):
         self.setWindowTitle('2-Way Deterministic Finite Automata')
         self.setFixedWidth(720)
         self.setFixedHeight(720)
-        self.size = None
         self.fileName = None
 
         self.machine = None
-        self.word= None
-        self.curr_state = None
-        self.head = None
-        self.direction =None
-        self.accepted = None
-        self.prev_state = None
         self.size = None
 
 
@@ -123,7 +116,7 @@ class Machine(QWidget):
         self.curr_state_label = QLabel("Current State: ")
         self.head_label = QLabel("Head: ")
         self.word_label = QLabel("Word: ")
-        self.transition_label = QLabel("Transition used: ")
+        self.transition_label = QLabel("Transition: ")
         self.direction_label = QLabel("Read Direction: ")
      
     """
@@ -174,12 +167,6 @@ class Machine(QWidget):
     """
     def resetMachine(self):
         self.machine = None
-        self.word = None
-        self.curr_state = None
-        self.head = None
-        self.direction = None
-        self.accepted = None
-        self.prev_state = None
         self.size = None
         # Remove the old grid and status box
         if self.vbox.count() > 1:
@@ -238,7 +225,7 @@ class Machine(QWidget):
     def setInput(self):
          name, done1 = QInputDialog.getText(self, 'Input Word', 'Enter a word:')
          if done1:
-            self.word = attachEndMarker(name)
+            self.machine.setWord(attachEndMarker(name))
          self.startButton.setEnabled(True)
     """
     @definition: This function is called when the user clicks the start button. It will
@@ -253,19 +240,15 @@ class Machine(QWidget):
         self.startButton.setEnabled(False)
         self.stepButton.setEnabled(True)
         self.inputWordButton.setEnabled(False)
-  
-        self.head=0 # this is the pointer to which character will be read from the word 
-        self.curr_state = self.machine.getStart()
-        self.prev_state = self.curr_state
-        self.accepted = False
-        self.direction = "right"
 
-        self.curr_state_label.setText("Current State: " + self.curr_state)
-        self.head_label.setText("Head: " + str(self.head))
-        if len(self.word) ==0:
-            self.word_label.setText("Word: " + self.word)
+
+        self.curr_state_label.setText("Current State: " + self.machine.getCurrState())
+        self.head_label.setText("Head: " + str(self.machine.getHead())+" Character: " + self.machine.getWord()[self.machine.getHead()])
+        if len(self.machine.getWord()) ==0:
+            self.word_label.setText("Word: ")
         else:
-            self.word_label.setText("Word: " + self.word[:self.head]+"   " +self.word[self.head]+"   " +self.word[self.head+1:])
+            self.word_label.setText("Word: " + self.machine.getWord()[:self.machine.getHead()]+"   " +self.machine.getWord()[self.machine.getHead()]+"   " +self.machine.getWord()[self.machine.getHead()+1:])
+        self.direction_label.setText("Direction: " + self.machine.getDirection())
         statusBox = QHBoxLayout()
         statusBox.addWidget(self.curr_state_label)
         statusBox.addWidget(self.head_label)
@@ -286,41 +269,43 @@ class Machine(QWidget):
         Step through the node traversal
         """
         
-        if validateSymbol(self.word[self.head], self.machine.getSigma()):
-            self.prev_state = self.curr_state
+        if validateSymbol(self.machine.getWord()[self.machine.getHead()], self.machine.getSigma()):
+            self.machine.setPrevState(self.machine.getCurrState())
             self.resetColor()
-            self.curr_state, self.direction, transition_used = nextStep(self.machine.getDelta(), self.curr_state, self.word[self.head])
+            curr_state, direction, transition_used = nextStep(self.machine.getDelta(), self.machine.getCurrState(), self.machine.getWord()[self.machine.getHead()])
+            self.machine.setCurrState(curr_state)
+            self.machine.setDirection(direction)
             self.showCurrentState(transition_used)
         else: #display error symbol does not exist in sigma
-            self.showNoGoalMessage("Symbol "+self.word[self.head]+" does not exist in sigma")
-        if self.direction =="left":
-            self.head -=1
+            self.showNoGoalMessage("Symbol "+self.machine.getWord()[self.getHead()]+" does not exist in sigma")
+        if self.machine.getDirection() =="left":
+            self.machine.setLeftHead()
         else:
-            self.head +=1
+            self.machine.setRightHead()
 
-        if isEnd(self.curr_state, self.machine.getAccept(), self.machine.getReject(), self.word[self.head]):
-            if isAccepted(self.curr_state, self.machine.getAccept()):
-                self.accepted = True
+        if isEnd(self.machine.getCurrState(), self.machine.getAccept(), self.machine.getReject(), self.machine.getWord()[self.machine.getHead()]):
+            if isAccepted(self.machine.getCurrState(), self.machine.getAccept()):
+                self.machine.setAccepted(True)
                 #show accept message
             else:
                 #show reject message
-                self.accepted = False
-            self.showEndMessage(self.accepted)
+                self.machine.setAccepted(False)
+            self.showEndMessage(self.machine.getAccepted())
     """
     @definition: This function updates the views of the status of the machine. it displays the current state, the head, 
                     the word, the direction, and the transition used
     """
     def showCurrentState(self, transition_used):
-        self.curr_state_label.setText("Current State: " + self.curr_state)
-        self.head_label.setText("Head: " + str(self.head))
-        if len(self.word) ==0:
-            self.word_label.setText("Word: " + self.word)
+        self.curr_state_label.setText("Current State: " + self.machine.getCurrState())
+        self.head_label.setText("Head: " + str(self.machine.getHead()) + " Character: "+self.machine.getWord()[self.machine.getHead()])
+        if len(self.machine.getWord()) ==0:
+            self.word_label.setText("Word: ")
         else:
-            self.word_label.setText("Word: " + self.word[:self.head]+"   "+ self.word[self.head]+ "   " +self.word[self.head+1:])
-        self.direction_label.setText("Direction: " + self.direction)
-        self.transition_label.setText("Transition Used: " + ' '.join(map(str,transition_used)))
-        self.direction_label.setText("Direction: " + self.direction)
-        state =self.findChild(State, f'state{self.curr_state}')
+            self.word_label.setText("Word: " + self.machine.getWord()[:self.machine.getHead()]+"   "+ self.machine.getWord()[self.machine.getHead()]+ "   " +self.machine.getWord()[self.machine.getHead()+1:])
+        self.direction_label.setText("Direction: " + self.machine.getDirection())
+        self.transition_label.setText("Transition: " + ' '.join(map(str,transition_used)))
+        self.direction_label.setText("Direction: " + self.machine.getDirection())
+        state =self.findChild(State, f'state{self.machine.getCurrState()}')
         state.color = "blue"
         state.update()
 
@@ -331,12 +316,12 @@ class Machine(QWidget):
 
     """
     def resetColor(self):
-        state = self.findChild(State, f'state{self.prev_state}')
-        if self.prev_state == self.machine.getStart():
+        state = self.findChild(State, f'state{self.machine.getPrevState()}')
+        if self.machine.getPrevState() == self.machine.getStart():
             state.color = "yellow"
-        elif self.prev_state == self.machine.getAccept():
+        elif self.machine.getPrevState() == self.machine.getAccept():
             state.color = "green"
-        elif self.prev_state == self.machine.getReject():
+        elif self.machine.getPrevState() == self.machine.getReject():
             state.color = "red"
         else:
             state.color = "white"
@@ -358,11 +343,7 @@ class Machine(QWidget):
             else:
                 state.color = "white"
             state.update()
-            self.curr_state = self.machine.getStart()
-            self.prev_state = self.curr_state
-            self.head = 0
-            self.word =""
-            self.direction = "right"
+            self.machine.resetState()
             self.startButton.setEnabled(False)
             self.stepButton.setEnabled(False)
             self.inputWordButton.setEnabled(True)
@@ -378,10 +359,10 @@ class Machine(QWidget):
         message.setIcon(QMessageBox.Information)
         if accept:
             title = "Accepted"
-            msg = f'The word {self.word} has been accepted by the provided machine!'
+            msg = f'The word {self.machine.getWord()} has been accepted by the provided machine!'
         else:
             title = "Rejected"
-            msg = f'The word {self.word} has been rejected by the provided machine!'
+            msg = f'The word {self.machine.getWord()} has been rejected by the provided machine!'
         message.setWindowTitle(title)
         message.setText(msg)
         message.setStandardButtons(QMessageBox.Ok)

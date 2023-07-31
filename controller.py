@@ -1,6 +1,6 @@
 from queue import Queue
 import sys
-from model import *
+from model import Machine_2DFA
 from math import sqrt
 """
 
