@@ -157,10 +157,7 @@ def whichTransition_Exact(list_transition, input):
 """
 
 def validateSymbol(character, sigma):
-    extended_sigma = ['-','+']
-    for i in sigma:
-        extended_sigma.append(i)
-    if character in extended_sigma:
+    if character in sigma:
         return True
     else:
         print("Invalid input : input not in alphabet")

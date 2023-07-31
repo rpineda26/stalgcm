@@ -63,12 +63,6 @@ class State(QWidget):
 """
 @definition : This class is the view representation of the entire machine. The flow of user input is: (open text file -> (input word -> start -> step *)*)*) where * means repetition
 @attributes: machine - the DFA that is being represented by the view
-            word - the word that is being inputted by the user
-            curr_state - the current state of the machine
-            head - the current character in the world that is being processed
-            direction - the reading direction for the next input
-            accepted - the boolean value that determines if the machine has accepted the word
-            prev_state - the previous state of the machine
 """
 
 class Machine(QWidget):
@@ -135,9 +129,6 @@ class Machine(QWidget):
     @definition: This function creates a grid to hold views the states of the machine
     """
     def createGrid(self):
-        """
-        Create a grid of squares for the maze
-        """
         grid = QGridLayout()
         grid.setSpacing(2)
 
@@ -161,6 +152,10 @@ class Machine(QWidget):
 
         self.vbox.addLayout(grid)
         self.createStatusBar()
+
+    """
+    @definition: This function creates a horizontal layout to display the status bar
+    """
 
     def createStatusBar(self):
 
@@ -236,9 +231,9 @@ class Machine(QWidget):
             self.inputWordButton.setEnabled(True)
             flag_create_machine = True
         else:
-            if code ==1:
+            if code ==2:
                 err = "Invalid transition function"
-            elif code ==2:
+            elif code ==1:
                 err = "Machine is not deterministic"
             self.showNoGoalMessage(err)
             self.startButton.setEnabled(False)
@@ -284,8 +279,12 @@ class Machine(QWidget):
         """
         Step through the node traversal
         """
-        
-        if validateSymbol(self.machine.getWord()[self.machine.getHead()], self.machine.getSigma()):
+        flag = False
+        if self.machine.getHead() == len(self.machine.getWord())-1 or self.machine.getHead()==0:
+            flag = True
+        if  validateSymbol(self.machine.getWord()[self.machine.getHead()], self.machine.getSigma()):
+            flag= True
+        if flag:
             self.machine.setPrevState(self.machine.getCurrState())
             self.resetColor()
             curr_state, direction, transition_used = nextStep(self.machine.getDelta(), self.machine.getCurrState(), self.machine.getWord()[self.machine.getHead()])
@@ -293,7 +292,9 @@ class Machine(QWidget):
             self.machine.setDirection(direction)
             self.showCurrentState(transition_used)
         else: #display error symbol does not exist in sigma
-            self.showNoGoalMessage("Symbol "+self.machine.getWord()[self.getHead()]+" does not exist in sigma")
+            self.showNoGoalMessage("Symbol "+self.machine.getWord()[self.machine.getHead()]+" does not exist in sigma")
+            self.resetWord()
+            return 0
         if self.machine.getDirection() =="left":
             self.machine.setLeftHead()
         else:
