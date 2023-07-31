@@ -149,18 +149,22 @@ class Machine(QWidget):
         grid.setSpacing(2)
 
         self.inputWordButton.setEnabled(True)
-        for i in self.machine.getQ():
-            if i == self.machine.getStart():
-                state = State('yellow', self)
-            elif i== self.machine.getAccept():
-                state = State('green', self)
-            elif i== self.machine.getReject():
-                state = State('red', self)
-            else:
-                state = State('white', self)
-            state.set_text(i)
-            state.setObjectName(f'state{i}')
-            grid.addWidget(state)
+        counter = 0
+        for i in range (self.size):
+            for j in range(self.size):
+                if counter < len(self.machine.getQ()):
+                    if self.machine.getQ()[counter] == self.machine.getStart():
+                        state = State('yellow', self)
+                    elif self.machine.getQ()[counter]== self.machine.getAccept():
+                        state = State('green', self)
+                    elif self.machine.getQ()[counter]== self.machine.getReject():
+                        state = State('red', self)
+                    else:
+                        state = State('white', self)
+                    state.set_text(self.machine.getQ()[counter])
+                    state.setObjectName(f'state{self.machine.getQ()[counter]}')
+                    grid.addWidget(state, i, j)
+                counter += 1
 
         self.vbox.addLayout(grid)
 
