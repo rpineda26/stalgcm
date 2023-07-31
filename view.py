@@ -36,7 +36,7 @@ class State(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setBrush(QBrush(QColor(self.color)))
-        painter.drawRect(self.rect())
+        painter.drawEllipse(self.rect())
     """
     @definition: This function sets the name of the state. It can reference the state it represents through its name.
     @param: text - the name of the state
