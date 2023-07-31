@@ -85,6 +85,7 @@ class Machine_2DFA:
         self.direction ="right"
         self.accepted = False
         self.prev_state = None
+        
     def resetState(self):
         self.word = None
         self.curr_state = self.start

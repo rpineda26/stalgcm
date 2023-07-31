@@ -113,11 +113,11 @@ class Machine(QWidget):
             state.setMinimumSize(size // self.size, size // self.size)
 
 
-        self.curr_state_label = QLabel("Current State: ")
-        self.head_label = QLabel("Head: ")
-        self.word_label = QLabel("Word: ")
-        self.transition_label = QLabel("Transition: ")
-        self.direction_label = QLabel("Read Direction: ")
+        self.curr_state_label = None
+        self.head_label = None
+        self.word_label = None
+        self.transition_label =None
+        self.direction_label = None
      
     """
     @definition: This function makes the states size dynamic depending on the window size
@@ -160,6 +160,24 @@ class Machine(QWidget):
                 counter += 1
 
         self.vbox.addLayout(grid)
+        self.createStatusBar()
+
+    def createStatusBar(self):
+
+        self.head_label = QLabel("Head: 0 Character: -")
+        self.word_label = QLabel("Word: ")
+        self.transition_label = QLabel("Transition: ")
+        self.direction_label = QLabel("Read Direction: right")
+        self.curr_state_label = QLabel("Current State: " + self.machine.getCurrState())
+        self.direction_label = QLabel("Direction: " + self.machine.getDirection())
+        statusBox = QHBoxLayout()
+        statusBox.addWidget(self.curr_state_label)
+        statusBox.addWidget(self.head_label)
+        statusBox.addWidget(self.word_label)
+        statusBox.addWidget(self.transition_label)
+        statusBox.addWidget(self.direction_label)
+        
+        self.vbox.addLayout(statusBox)
 
     """
     @definition: This function resets the attributes of the object instance of this 
@@ -170,10 +188,17 @@ class Machine(QWidget):
         self.size = None
         # Remove the old grid and status box
         if self.vbox.count() > 1:
+            print(self.vbox.itemAt(2))
             self.vbox.layout().removeItem(self.vbox.itemAt(2))
             self.vbox.layout().removeItem(self.vbox.itemAt(1))
+            self.curr_state_label.setParent(None)
+            self.head_label.setParent(None)
+            self.word_label.setParent(None)
+            self.transition_label.setParent(None)
+            self.direction_label.setParent(None)
         self.stepButton.setEnabled(False)
         self.startButton.setEnabled(False)
+        self.update()
     """
     @definition: This function reads the machine definition file and creates a DFA object
                   Through this same function, the file is read and validated for errors.
@@ -241,21 +266,12 @@ class Machine(QWidget):
         self.stepButton.setEnabled(True)
         self.inputWordButton.setEnabled(False)
 
-
-        self.curr_state_label.setText("Current State: " + self.machine.getCurrState())
         self.head_label.setText("Head: " + str(self.machine.getHead())+" Character: " + self.machine.getWord()[self.machine.getHead()])
         if len(self.machine.getWord()) ==0:
             self.word_label.setText("Word: ")
         else:
             self.word_label.setText("Word: " + self.machine.getWord()[:self.machine.getHead()]+"   " +self.machine.getWord()[self.machine.getHead()]+"   " +self.machine.getWord()[self.machine.getHead()+1:])
-        self.direction_label.setText("Direction: " + self.machine.getDirection())
-        statusBox = QHBoxLayout()
-        statusBox.addWidget(self.curr_state_label)
-        statusBox.addWidget(self.head_label)
-        statusBox.addWidget(self.word_label)
-        statusBox.addWidget(self.transition_label)
-        statusBox.addWidget(self.direction_label)
-        self.vbox.addLayout(statusBox)
+        
 
         
         #show current state
