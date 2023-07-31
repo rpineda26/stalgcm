@@ -71,11 +71,28 @@ def initializeMachine(Q, sigma, delta, start, accept, reject):
         code = 2
         machine = None
     else:
+        Q = validateUniqueStateName(Q)
         code = 0
         machine = Machine_2DFA(Q, sigma, delta, start, accept, reject)
         
     return code, machine
 
+"""
+@definiiton: This function makes sure that the given names of the states in the machine definition
+              are unique. If not, it appends a number to the state name to make it unique.
+@params:  Q  -  set of all states
+@returns:  Q  -  set of all states with unique names
+"""
+
+def validateUniqueStateName(Q):
+    for i in Q:
+        counter = 0
+        for j in Q:
+            if i != j:
+                if Q[i] == Q[j]:
+                    counter +=1
+                    Q[j] += str(counter)
+    return Q
 
 """
 
